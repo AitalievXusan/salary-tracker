@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Трекер доходов и расходов</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="mark" aria-hidden="true"></span>
+        <div>
+          <p class="eyebrow" data-i18n="eyebrow">Личные финансы</p>
+          <h1 data-i18n="appName">Трекер</h1>
+        </div>
+      </div>
+      <nav class="nav" data-i18n-aria="navLabel" aria-label="Разделы">
+        <span class="nav-pill" aria-hidden="true"></span>
+        <button type="button" data-view="dashboard" class="is-active" aria-current="page" data-i18n="dashboard">Дашборд</button>
+        <button type="button" data-view="transactions" data-i18n="transactions">Операции</button>
+        <button type="button" data-view="categories" data-i18n="categories">Категории</button>
+        <button type="button" data-view="settings" data-i18n="settings">Настройки</button>
+      </nav>
+    </header>
+
+    <main class="stage">
+      <section id="view-dashboard" class="view">
+        <div class="section-head">
+          <div>
+            <h2 data-i18n="dashboard">Дашборд</h2>
+            <p id="period-caption" class="muted">Этот месяц</p>
+          </div>
+          <div class="head-actions">
+            <label class="field compact">
+              <span data-i18n="period">Период</span>
+              <select id="period-select">
+                <option value="month" data-i18n="thisMonth">Этот месяц</option>
+                <option value="year" data-i18n="thisYear">Этот год</option>
+                <option value="all" data-i18n="allTime">Всё время</option>
+              </select>
+            </label>
+            <button type="button" class="btn" id="dash-add" data-i18n="add">Добавить</button>
+          </div>
+        </div>
+
+        <div class="stats">
+          <article class="card stat balance">
+            <p class="stat-label" data-i18n="balance">Баланс</p>
+            <p id="stat-balance" class="stat-value">—</p>
+          </article>
+          <article class="card stat income">
+            <p class="stat-label" data-i18n="income">Доходы</p>
+            <p id="stat-income" class="stat-value">—</p>
+          </article>
+          <article class="card stat expense">
+            <p class="stat-label" data-i18n="expenses">Расходы</p>
+            <p id="stat-expense" class="stat-value">—</p>
+          </article>
+        </div>
+
+        <div class="chart-grid">
+          <article class="card chart-card">
+            <div class="chart-head">
+              <h3 data-i18n="chartBoth">Доходы и расходы</h3>
+              <div class="chips">
+                <span class="chip"><i class="swatch is-income"></i><span data-i18n="income">Доходы</span></span>
+                <span class="chip"><i class="swatch is-expense"></i><span data-i18n="expenses">Расходы</span></span>
+              </div>
+            </div>
+            <canvas id="bar-canvas" role="img" data-i18n-aria="chartBoth" aria-label="Столбчатый график доходов и расходов"></canvas>
+          </article>
+          <article class="card chart-card">
+            <div class="chart-head">
+              <h3 data-i18n="donutTitle">Расходы по категориям</h3>
+            </div>
+            <div class="donut-layout">
+              <div class="donut-canvas-wrap">
+                <canvas id="donut-canvas" role="img" data-i18n-aria="donutTitle" aria-label="Кольцевой график расходов по категориям"></canvas>
+              </div>
+              <ul id="donut-legend" class="legend"></ul>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="view-transactions" class="view" hidden>
+        <div class="section-head">
+          <div>
+            <h2 data-i18n="transactions">Операции</h2>
+            <p id="tx-count" class="muted"></p>
+          </div>
+          <button type="button" class="btn" id="tx-add" data-i18n="add">Добавить</button>
+        </div>
+        <div class="toolbar">
+          <label class="field compact">
+            <span data-i18n="type">Тип</span>
+            <select id="tx-type-filter">
+              <option value="all" data-i18n="all">Все</option>
+              <option value="income" data-i18n="income">Доходы</option>
+              <option value="expense" data-i18n="expenses">Расходы</option>
+            </select>
+          </label>
+          <label class="field compact">
+            <span data-i18n="category">Категория</span>
+            <select id="tx-category-filter">
+              <option value="all">Все категории</option>
+            </select>
+          </label>
+          <label class="field compact grow">
+            <span data-i18n="searchNote">Поиск по заметке</span>
+            <input id="tx-search" type="search" data-i18n-placeholder="searchPh" placeholder="Например, аванс" autocomplete="off">
+          </label>
+        </div>
+        <div id="tx-list" class="tx-list"></div>
+      </section>
+
+      <section id="view-categories" class="view" hidden>
+        <div class="section-head">
+          <div>
+            <h2 data-i18n="categories">Категории</h2>
+            <p class="muted" data-i18n="catIntro">Доходы и расходы группируются по категориям.</p>
+          </div>
+        </div>
+        <div class="split">
+          <form id="cat-form" class="card form-card">
+            <h3 id="cat-form-title">Новая категория</h3>
+            <label class="field">
+              <span data-i18n="name">Название</span>
+              <input id="cat-name" type="text" maxlength="32" required autocomplete="off" data-i18n-placeholder="catPh" placeholder="Например, Кафе">
+            </label>
+            <label class="field">
+              <span data-i18n="type">Тип</span>
+              <select id="cat-type">
+                <option value="income" data-i18n="incomeOne">Доход</option>
+                <option value="expense" data-i18n="expenseOne" selected>Расход</option>
+              </select>
+            </label>
+            <p id="cat-hint" class="hint" data-i18n="typeLocked" hidden>Тип уже созданной категории нельзя изменить.</p>
+            <p id="cat-error" class="form-error" hidden></p>
+            <div class="form-actions">
+              <button type="button" class="btn ghost" id="cat-cancel" data-i18n="cancel" hidden>Отмена</button>
+              <button type="submit" class="btn" id="cat-submit">Добавить</button>
+            </div>
+          </form>
+          <div id="cat-list" class="cat-list"></div>
+        </div>
+      </section>
+
+      <section id="view-settings" class="view" hidden>
+        <div class="section-head">
+          <div>
+            <h2 data-i18n="settings">Настройки</h2>
+            <p class="muted" data-i18n="settingsLead">Валюта по умолчанию — сум.</p>
+          </div>
+        </div>
+        <form id="settings-form" class="card form-card narrow">
+          <label class="field">
+            <span data-i18n="language">Язык</span>
+            <select id="language-select">
+              <option value="ru">Русский</option>
+              <option value="uz">Oʻzbekcha</option>
+              <option value="de">Deutsch</option>
+            </select>
+          </label>
+          <label class="field">
+            <span data-i18n="currencyLabel">Обозначение валюты</span>
+            <input id="currency-input" type="text" maxlength="12" required autocomplete="off" spellcheck="false" value="сум">
+          </label>
+          <p class="hint" data-i18n="currencyHint">Суммы хранятся как числа. Смена валюты меняет только подпись, без пересчёта.</p>
+          <p id="currency-preview" class="preview"></p>
+          <p id="settings-status" class="form-error" hidden></p>
+          <div class="form-actions">
+            <button type="submit" class="btn" data-i18n="save">Сохранить</button>
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <footer class="footnote" data-i18n="footer">Данные хранятся локально в этом браузере.</footer>
+  </div>
+
+  <dialog id="tx-dialog" aria-labelledby="tx-form-title">
+    <form id="tx-form">
+      <h2 id="tx-form-title">Новая операция</h2>
+      <div class="segmented" role="radiogroup" data-i18n-aria="txType" aria-label="Тип операции">
+        <label class="segment">
+          <input type="radio" name="tx-type" value="income" checked>
+          <span data-i18n="incomeOne">Доход</span>
+        </label>
+        <label class="segment">
+          <input type="radio" name="tx-type" value="expense">
+          <span data-i18n="expenseOne">Расход</span>
+        </label>
+      </div>
+      <div class="form-grid">
+        <label class="field">
+          <span data-i18n="amount">Сумма</span>
+          <input id="tx-amount" type="text" inputmode="decimal" autocomplete="off" required placeholder="0">
+        </label>
+        <label class="field">
+          <span data-i18n="date">Дата</span>
+          <input id="tx-date" type="date" required>
+        </label>
+      </div>
+      <label class="field">
+        <span data-i18n="category">Категория</span>
+        <select id="tx-category" required></select>
+      </label>
+      <label class="field">
+        <span data-i18n="note">Заметка</span>
+        <textarea id="tx-note" maxlength="140" data-i18n-placeholder="notePh" placeholder="Необязательно"></textarea>
+      </label>
+      <p id="tx-error" class="form-error" hidden></p>
+      <div class="form-actions">
+        <button type="button" class="btn ghost" id="tx-cancel" data-i18n="cancel">Отмена</button>
+        <button type="submit" class="btn" id="tx-submit">Добавить</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="confirm-dialog" aria-labelledby="confirm-title">
+    <h2 id="confirm-title" data-i18n="deletion">Удаление</h2>
+    <p id="confirm-text"></p>
+    <div class="form-actions">
+      <button type="button" class="btn ghost" id="confirm-cancel" data-i18n="cancel">Отмена</button>
+      <button type="button" class="btn danger-fill" id="confirm-ok" data-i18n="delete">Удалить</button>
+    </div>
+  </dialog>
+
+  <div id="chart-tip" class="chart-tip" hidden></div>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
